@@ -1,0 +1,14 @@
+#add-customer-container {
+	margin:10px 0px;
+}
+#add-customer-results {
+	margin: 10px 0px;
+}
+.submit-error {
+	color: red;
+	font-weight: bold;
+}
+.submit-success {
+	color: green;
+	font-weight: bold;
+}

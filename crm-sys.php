@@ -46,10 +46,9 @@ class CRM_System {
 		add_action( 'manage_crm_customer_posts_custom_column', array( $this, 'add_columns') );
 		add_action( 'manage_crm_customer_posts_column',  array( $this, 'add_columns') );
 
-		//Activation/deactivation/uninstallation controls
+		//Activation/deactivation controls
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
-		register_uninstall_hook( __FILE__, array( $this, 'uninstall' ) );
 
 		//Register shortcode
 		add_shortcode( 'customer_form', array( $this, 'shortcode' ) );
@@ -120,19 +119,6 @@ class CRM_System {
 
 	function deactivation() {
 		flush_rewrite_rules();
-	}
-
-	function uninstall() {
-		global $wpdb;
-		global $wp_post_types;
-
-		$wpdb->query("DELETE * FROM 'wp_posts' WHERE 'post_type' = 'crm_customer' ");
-
-	    if ( isset( $wp_post_types[ 'crm_customer' ] ) ) {
-	        unset( $wp_post_types[ 'crm_customer' ] );
-	        return true;
-	    }
-
 	}
 
 	function add_meta_box() {

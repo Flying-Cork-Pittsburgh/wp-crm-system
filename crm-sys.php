@@ -57,25 +57,49 @@ class CRM_System {
 		add_action('wp_ajax_add_customer', array( $this, 'addCustomer') );
 		add_action('wp_ajax_add_customer', array( $this, 'addCustomer') );
 		add_action('wp_ajax_nopriv_add_customer', array( $this, 'addCustomer') );
-		wp_enqueue_script( 'add-customer-ajax',plugin_dir_url( __FILE__ ) . '/js/addCustomer.js', array( 'jquery' ) );
-		wp_localize_script( 'add-customer-ajax', 'AddCustAjax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
-
+		add_action('wp_enqueue_scripts', array( $this, 'load_ajax_scripts') );
 		add_action('admin_head', array( $this, 'customize_edit_page') );
 
     }
+    /**
+    * Load backend scripts/styles
+    */
+    function load_custom_wp_admin_style() {
+        wp_register_style( 'custom_wp_admin_css', plugin_dir_url( __FILE__ ) . '/css/app-admin.css', false, '1.0.0' );
+        wp_enqueue_style( 'custom_wp_admin_css' );
+        wp_enqueue_script( 'crm-app-js',plugin_dir_url( __FILE__ ) . '/js/app.js', array( 'jquery' ) );
+	}
 
-	// register the "customer" custom post type
+	/**
+	* Load frontend scripts/styles
+	*/
+	function load_front_facing_style() {
+		wp_register_style( 'crm-app', plugin_dir_url(__FILE__) . '/css/app.css' );
+		wp_register_style( 'crm-bootstrap', plugin_dir_url( __FILE__ ) . '/css/bootstrap.min.css' );
+		wp_enqueue_style( 'crm-app' );
+		wp_enqueue_style( 'crm-bootstrap' );
+	}
+
+	function load_ajax_scripts() {
+		wp_enqueue_script( 'add-customer-ajax',plugin_dir_url( __FILE__ ) . '/js/addCustomer.js', array( 'jquery' ) );
+		wp_localize_script( 'add-customer-ajax', 'AddCustAjax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+	}
+
+	/**
+	* Register the customer custom post type
+	*/
+
 	function setup_post_type() {
 	    register_post_type( 'crm_customer', array(
 				'labels' => array(
-					'name' => 'Customers',
-					'singular_name' => 'Customer',
-					'add_new_item' => 'Add New Customer',
-					'edit_item' => 'Edit Customer',
-					'new_item' => 'New Customer',
-					'view_item' => 'View Customer',
-					'search_items' => 'Search Customers',
-					'not_found' => 'No customer found'
+					'name' => __('Customers'),
+					'singular_name' => __( 'Customer' ),
+					'add_new_item' => __( 'Add New Customer' ),
+					'edit_item' => __( 'Edit Customer' ),
+					'new_item' => __( 'New Customer' ),
+					'view_item' => __( 'View Customer' ),
+					'search_items' => __( 'Search Customers' ),
+					'not_found' => __( 'No customer found' )
 				),
 				'show_ui' => true,
 				'public' => false,
@@ -102,7 +126,6 @@ class CRM_System {
 				'supports' => array(
 					'name',
 					'email',
-					'budget'
 					),
 		  ) );
 
@@ -122,18 +145,18 @@ class CRM_System {
 	}
 
 	function add_meta_box() {
-	    $screens = ['crm_customer'];
-	    foreach ($screens as $screen) {
-	        add_meta_box(
-	            'crm-customer-box',           // Unique ID
-	            'Customer Information',  // Box title
-	            array( $this, 'customer_meta_box_html'),  // Content callback, must be of type callable
-	            $screen                   // Post type
-	        );
-	    }
+        add_meta_box(
+            'crm-customer-box',           // Unique ID
+            'Customer Information',  // Box title
+            array( $this, 'customer_meta_box_html'),  // Content callback, must be of type callable
+            'crm_customer'                   // Post type
+        );
 	}
 
-	//Create form fields for creating/editting customers
+	/**
+	* Create form fields for creating/editing customers
+	*/
+
 	function customer_meta_box_html($post) {
 		//Grab customer meta data. Force as an array for easy processing
 		$customer_info = (array)$this->get_customer_data();
@@ -142,28 +165,23 @@ class CRM_System {
 		    <p>
 		    	<h3>Name</h3>
 			    <label for="crm_name">Enter customer name below:</label></br>
-			    <input id="customer-name" class="crm-input-field" value="<?php echo esc_html( $customer_info['name'] ); ?>" name="customer[name]" name="post_title"/>
+			    <input id="customer-name" class="crm-input-field" value="<?php isset( $customer_info['name'] ) ? $attr = $customer_info['name'] : $attr = ''; echo esc_attr( $attr );?>" name="customer[name]" name="post_title"/>
 			</p>
 
 			<p>
 				<h3>Phone</h3>
 			    <label for="crm_phone">Enter customer phone number below: Ex (555-555-5555)</label></br>
-			    <input class="crm-input-field" value="<?php echo esc_html( $customer_info['phone'] ); ?>" name="customer[phone]"/>
+			    <input class="crm-input-field" value="<?php isset( $customer_info['phone'] ) ? $attr = $customer_info['phone'] : $attr = ''; echo esc_attr( $attr );?>" name="customer[phone]"/>
 			</p>
 			<p>
 				<h3>Email</h3>
 			    <label for="crm_email">Enter customer email address below:</label></br>
-			    <input class="crm-input-field" value="<?php echo esc_html( $customer_info['email'] ); ?>" name="customer[email]"/>
-			</p>
-			<p>
-				<h3>Budget</h3>
-			    <label for="crm_budget">Enter desired customer budget below:</label></br>
-			    <input class="crm-input-field" value="<?php echo esc_html( $customer_info['budget'] ); ?>" name="customer[budget]"/>
+			    <input class="crm-input-field" value="<?php isset( $customer_info['email'] ) ? $attr = $customer_info['email'] : $attr = ''; echo esc_attr( $attr );?>" name="customer[email]"/>
 			</p>
 			<p>
 				<h3>Message</h3>
 			    <label for="crm_message">Leave any kind of note about the customer below:</label></br>
-			    <textarea class="crm-input-field crm-text-field" name="customer[message]"><?php echo esc_html( $customer_info['message'] ); ?></textarea>
+			    <textarea class="crm-input-field crm-text-field" name="customer[message]"><?php isset( $customer_info['message'] ) ? $attr = $customer_info['message'] : $attr = ''; echo esc_html( $attr );?></textarea>
 			</p>
 			<p>
 				<?php if ( get_post_status() != 'publish' ) {?>
@@ -183,73 +201,12 @@ class CRM_System {
 		remove_meta_box( 'submitdiv', 'crm_customer', 'side' );
 	}
 
-	function load_custom_wp_admin_style() {
-        wp_register_style( 'custom_wp_admin_css', plugin_dir_url( __FILE__ ) . '/css/app-admin.css', false, '1.0.0' );
-        wp_enqueue_style( 'custom_wp_admin_css' );
-        wp_enqueue_script( 'crm-app-js',plugin_dir_url( __FILE__ ) . '/js/app.js', array( 'jquery' ) );
-        wp_enqueue_script( 'crm-app-js',plugin_dir_url( __FILE__ ) . '/js/app.js', array( 'jquery' ) );
-	}
-	function load_front_facing_style() {
-		wp_register_style( 'crm-app', plugin_dir_url(__FILE__) . '/css/app.css' );
-		wp_register_style( 'crm-bootstrap', plugin_dir_url( __FILE__ ) . '/css/bootstrap.min.css' );
-		wp_enqueue_style( 'crm-app' );
-		wp_enqueue_style( 'crm-bootstrap' );
-	}
-
-	function shortcode( $atts ) {
-		$atts = shortcode_atts(array(
-				'name' => 'Name:',
-				'phone' => 'Phone number:',
-				'email' => 'Email address:',
-				'budget' => 'Desired budget:',
-				'message' => 'Message:',
-				'name-max-length' => 524288,
-				'phone-max-length' => 524288,
-				'email-max-length' => 524288,
-				'budget-max-length' => 524288,
-				'message-max-length' => 524288,
-				'message-rows' => 5,
-				'message-cols' => 10
-			), $atts);
-
-		?>
-		<div id="add-customer-container">
-			<form method="post" id="add-customer-form">
-				<div class="form-group">
-					<label for="name"><?php echo $atts['name'] ?></label>
-					<input type="text" name="name" name="post_title" id="customer-name" class="form-control" maxlength="<?php echo (int)$atts['name-max-length'];?>">
-				</div>
-				<div class="form-group">
-					<label><?php echo $atts['phone'] ?></label>
-					<input type="text" name="phone" class="form-control" maxlength="<?php echo (int)$atts['phone-max-length'];?>">
-				</div>
-				<div class="form-group">
-					<label><?php echo $atts['email']?></label>
-					<input type="text" name="email" class="form-control" maxlength="<?php echo (int)$atts['email-max-length'];?>">
-				</div>
-				<div class="form-group">
-					<label><?php echo $atts['budget']?></label>
-					<input type="text" name="budget" class="form-control" maxlength="<?php echo (int)$atts['budget-max-length'];?>">
-				</div>
-				<div class="form-group">
-					<label><?php echo $atts['message']?></label>
-					<textarea name="message" class="form-control" maxlength="<?php echo (int)$atts['message-max-length'];?>" rows="<?php echo (int)$atts['message-rows'];?>" cols="<?php echo (int)$atts['message-cols'];?>"></textarea>
-				</div>
-				<input name="add-customer" id="add-customer" type="submit" class="button button-primary button-large" value="Add Customer">
-			</form>
-
-			<div id="add-customer-results"></div>
-		</div>
-		<?php
-	}
-
 	function custom_post_type_columns( $columns ) {
 		//unset( $columns['title'] );
 		$columns = array(
 			'cb' => '<input type="checkbox" />',
 			'title' => __( 'Name' ),
 			'email' => __( 'Email' ),
-			'budget' => __( 'Budget' ),
 		);
 
 		return $columns;
@@ -260,36 +217,17 @@ class CRM_System {
 	    switch ($name) {
 	    	case 'name':
 	    		$name = $customer['name'];
-	    		echo $name;
+	    		echo esc_html( $name );
 	        case 'email':
 	            $email = $customer['email'];
-	            echo $email;
+	            echo esc_html( $email );
 	            break;
-	        case 'budget':
-	        	$budget = $customer['budget'];
-	        	break;
 	    }
 	}
 
-	function save_post() {
-		global $post;
-		if ( $_POST['customer'] ) {
-
-			$customer_data = array();
-			foreach ( $_POST['customer'] as $key => $value ) {
-				$customer_data[$key] = $value;
-				if ( $key === 'name' ) {
-					$post->post_title = $value;
-				}
-			}
-			if ( $this->validate_input( $customer_data ) ) {
-				$this->set_customer_data( $customer_data );
-			}
-		}
-
-
-	}
-
+	/**
+	* Function to add customer. Gets submitted via ajax through form created with shortcode
+	*/
 	function addCustomer(){
 	    global $wpdb;
 
@@ -319,28 +257,48 @@ class CRM_System {
 	    exit();
 	}
 
-	//Helper get/set functions
-	function get_customer_data( $post_id = false ) {
-		if ( !$post_id ) {
-			global $post;
-			$post_id = $post->ID;
-		}
+	/**
+	* Shortcode to display a front-facing form for users to create new customers
+	*/
+	function shortcode( $atts ) {
+		$atts = shortcode_atts(array(
+				'name' => __( 'Name:' ),
+				'phone' => __( 'Phone number:' ),
+				'email' => __( 'Email address:' ),
+				'message' => __( 'Message:' ),
+				'name-max-length' => 524288,
+				'phone-max-length' => 524288,
+				'email-max-length' => 524288,
+				'message-max-length' => 524288,
+				'message-rows' => 5,
+				'message-cols' => 10
+			), $atts);
 
-		return get_post_meta( $post_id, 'customer_data', true );
+		?>
+		<div id="add-customer-container">
+			<form method="post" id="add-customer-form">
+				<div class="form-group">
+					<label for="name"><?php echo esc_html( $atts['name'] ); ?></label>
+					<input type="text" name="name" name="post_title" id="customer-name" class="form-control" maxlength="<?php echo esc_attr( (int)$atts['name-max-length'] );?>">
+				</div>
+				<div class="form-group">
+					<label><?php echo esc_html( $atts['phone'] );?></label>
+					<input type="text" name="phone" class="form-control" maxlength="<?php echo esc_attr( (int)$atts['phone-max-length'] );?>">
+				</div>
+				<div class="form-group">
+					<label><?php echo esc_html( $atts['email'] );?></label>
+					<input type="text" name="email" class="form-control" maxlength="<?php echo esc_attr( (int)$atts['email-max-length'] );?>">
+				</div>
+				<div class="form-group">
+					<label><?php echo esc_html( $atts['message'] );?></label>
+					<textarea name="message" class="form-control" maxlength="<?php echo esc_attr( (int)$atts['message-max-length'] );?>" rows="<?php echo esc_attr( (int)$atts['message-rows'] );?>" cols="<?php echo esc_attr( (int)$atts['message-cols'] );?>"></textarea>
+				</div>
+				<input name="add-customer" id="add-customer" type="submit" class="button button-primary button-large" value="Add Customer">
+			</form>
 
-	}
-	function set_customer_data( $data, $post_id = false ) {
-		if ( !$post_id ) {
-			global $post;
-			$post_id = $post->ID;
-		}
-		if ( is_array( $data ) && !empty( $data ) ) {
-			if ( !add_post_meta( $post_id, 'customer_data', $data, true ) ) { 
-			   update_post_meta( $post_id, 'customer_data', $data );
-			}
-		} else {
-			return false;
-		}
+			<div id="add-customer-results"></div>
+		</div>
+		<?php
 	}
 
 	function remove_quick_edit( $actions ) {
@@ -356,6 +314,28 @@ class CRM_System {
 		}
 	}
 
+	/**
+	* Save data for new customer. Run inputs through validate_input function for input sanitization
+	*/
+	function save_post() {
+		global $post;
+		if ( $_POST['customer'] ) {
+			$customer_data = array();
+			foreach ( $_POST['customer'] as $key => $value ) {
+				$customer_data[$key] = $value;
+				if ( $key === 'name' ) {
+					$post->post_title = $value;
+				}
+			}
+			if ( $this->validate_input( $customer_data ) ) {
+				$this->set_customer_data( $customer_data );
+			}
+		}
+	}
+
+	/**
+	* Sanitize input prior to saving
+	*/
 	function validate_input( $customer_data ) {
 		if ( !is_array($customer_data) ) {
 			return false;
@@ -378,11 +358,6 @@ class CRM_System {
 						wp_die( '<span class="submit-error">Invalid phone number entered. Please try again</span>', 'ERROR', array( 'back_link' => true ) );
 					}
 					break;
-				case 'budget':
-					if ( !preg_match("/\b\d{1,3}(?:,?\d{3})*(?:\.\d{2})?\b/", $value) ) {
-						wp_die( '<span class="submit-error">Invalid budget entered. Please try again</span>', 'ERROR', array( 'back_link' => true ) );
-					}
-					break;
 				case 'message':
 					$value = filter_var( $value, FILTER_SANITIZE_STRING );
 					break;
@@ -402,6 +377,32 @@ class CRM_System {
 	    	add_filter('months_dropdown_results', '__return_empty_array');
 	    	echo '<style>#posts-filter #post-query-submit{ display: none; } </style>';
 	    }
+	}
+
+	/**
+	* Helper get/set functions for grabbing customer meta data
+	*/
+	function get_customer_data( $post_id = false ) {
+		if ( !$post_id ) {
+			global $post;
+			$post_id = $post->ID;
+		}
+
+		return get_post_meta( $post_id, 'customer_data', true );
+
+	}
+	function set_customer_data( $data, $post_id = false ) {
+		if ( !$post_id ) {
+			global $post;
+			$post_id = $post->ID;
+		}
+		if ( is_array( $data ) && !empty( $data ) ) {
+			if ( !add_post_meta( $post_id, 'customer_data', $data, true ) ) { 
+			   update_post_meta( $post_id, 'customer_data', $data );
+			}
+		} else {
+			return false;
+		}
 	}
 }
 $crm = new CRM_system();

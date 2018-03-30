@@ -7,3 +7,6 @@
 .crm-text-field {
 	height: 150px;
 }
+#post-body #normal-sortables {
+	min-height: 0px;
+}
